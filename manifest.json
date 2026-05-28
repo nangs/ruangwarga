@@ -1,7 +1,7 @@
 {
-  "name": "KBBS App",
-  "short_name": "KBBS",
-  "description": "Manajemen Pengurus KBBS",
+  "name": "Ruang-Warga App",
+  "short_name": "Ruang Warga",
+  "description": "Sistem Manajemen RT/RW/Kelurahan",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
