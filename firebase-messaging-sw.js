@@ -26,29 +26,32 @@ self.addEventListener('activate', event => {
 
 // Handle pesan saat app tertutup / di tab lain
 messaging.onBackgroundMessage((payload) => {
-  const title   = payload.notification?.title || '🚨 Alert Darurat!';
-  const body    = payload.notification?.body  || 'Ada laporan darurat baru dari warga.';
-  const url     = payload.data?.url || '/panic-alerts';
-  const alertId = payload.data?.alert_id || Date.now();
+  const type  = payload.data?.type;
+  const isPanic = type === 'panic_button';
+
+  const title = payload.notification?.title || (isPanic ? '🚨 Alert Darurat!' : 'Notifikasi Baru');
+  const body  = payload.notification?.body  || (isPanic ? 'Ada laporan darurat baru dari warga.' : '');
+  const url   = payload.data?.url || '/';
+  const refId = payload.data?.alert_id || payload.data?.tamu_id || payload.data?.permohonan_id || Date.now();
 
   self.registration.showNotification(title, {
     body,
     icon:              '/logo192.png',
     badge:             '/logo192.png',
-    tag:               `panic-alert-${alertId}`,  // unik per alert → tidak saling replace
-    requireInteraction: true,
-    vibrate:           [300, 100, 300, 100, 300],
+    tag:               type ? `${type}-${refId}` : `notif-${refId}`,  // unik per jenis+item → tidak saling replace notif beda item
+    requireInteraction: isPanic,                                       // cuma alert darurat yang nempel sampai di-dismiss manual
+    vibrate:           isPanic ? [300, 100, 300, 100, 300] : [200, 100, 200],
     data:              { url },
     actions: [
-      { action: 'open', title: 'Lihat Alert' },
+      { action: 'open', title: isPanic ? 'Lihat Alert' : 'Lihat' },
     ],
   });
 });
 
-// Klik notifikasi → buka halaman panic-alerts
+// Klik notifikasi → buka halaman sesuai data.url (mis. /panic-alerts, /ajukan-surat, /tamu-lapor, /pengaduan)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || '/panic-alerts';
+  const url = event.notification.data?.url || '/';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
